@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/src/font/font.css">
+    <title>CODM Viewer - Match Stats</title>
+    <style> body { overflow: hidden; } </style>
+    <script>
+        const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('codm-stream') : null;
+        function onIncoming(message) {
+            const data = message?.data || message;
+            if (!data || !data.type) return;
+            if (data.type === 'match-stats') {
+                showMatchStats(data.image);
+            } else if (data.type === 'clear') {
+                clearAll();
+            }
+        }
+        function setupStorageFallback() {
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'codm-stream-message' && e.newValue) {
+                    try { onIncoming(JSON.parse(e.newValue)); } catch {}
+                }
+            });
+            setInterval(() => {
+                try {
+                    const raw = localStorage.getItem('codm-stream-last');
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        if ((!window.__lastAppliedTs || data.ts > window.__lastAppliedTs) && data.type === 'match-stats') {
+                            window.__lastAppliedTs = data.ts;
+                            onIncoming(data);
+                        }
+                    }
+                } catch {}
+            }, 500);
+        }
+        function clearAll() {
+            document.getElementById('no-content').classList.remove('hidden');
+            document.getElementById('stats').classList.add('hidden');
+        }
+        function showMatchStats(image) {
+            document.getElementById('no-content').classList.add('hidden');
+            const stats = document.getElementById('stats');
+            stats.classList.remove('hidden');
+            document.getElementById('stats-top').src = 'src/img/LOGO3.png';
+            document.getElementById('stats-bottom').src = 'src/img/bottom.png';
+            document.getElementById('stats-img').src = image;
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            clearAll();
+            if (channel) { channel.onmessage = onIncoming; }
+            setupStorageFallback();
+            try {
+                const raw = localStorage.getItem('codm-stream-last');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.type === 'match-stats') { window.__lastAppliedTs = data.ts; onIncoming(data); }
+                }
+            } catch {}
+        });
+    </script>
+    <style>
+        html, body { height: 100%; }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <div class="flex flex-col h-screen">
+        <div class="flex-1 flex items-center justify-center">
+            <div id="no-content" class="text-gray-500 text-center">
+                <svg class="w-24 h-24 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg>
+                <p class="text-lg">Waiting for match stats...</p>
+            </div>
+
+            <div id="stats" class="hidden w-full">
+                <div class="w-dvw h-dvh mx-auto relative overflow-hidden">
+                    <img id="stats-top" alt="" class="absolute top-0 left-0 w-full h-auto z-20 pointer-events-none">
+                    <img id="stats-img" class="absolute inset-0 w-full h-full object-contain object-center z-0" alt="Match Statistics">
+                    <img id="stats-bottom" alt="" class="absolute bottom-0 left-0 w-full h-auto z-10">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

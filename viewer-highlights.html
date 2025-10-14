@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/src/font/font.css">
+    <title>CODM Viewer - Highlights</title>
+    <style> body { overflow: hidden; } </style>
+    <script>
+        const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('codm-stream') : null;
+        function onIncoming(message) {
+            const data = message?.data || message;
+            if (!data || !data.type) return;
+            if (data.type === 'highlights') {
+                showHighlights(data);
+            } else if (data.type === 'clear') {
+                clearAll();
+            }
+        }
+        function setupStorageFallback() {
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'codm-stream-message' && e.newValue) {
+                    try { onIncoming(JSON.parse(e.newValue)); } catch {}
+                }
+            });
+            setInterval(() => {
+                try {
+                    const raw = localStorage.getItem('codm-stream-last');
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        if ((!window.__lastAppliedTs || data.ts > window.__lastAppliedTs) && data.type === 'highlights') {
+                            window.__lastAppliedTs = data.ts;
+                            onIncoming(data);
+                        }
+                    }
+                } catch {}
+            }, 500);
+        }
+        function clearAll() {
+            document.getElementById('no-content').classList.remove('hidden');
+            document.getElementById('highlights').classList.add('hidden');
+        }
+        function showHighlights(data) {
+            document.getElementById('no-content').classList.add('hidden');
+            const hl = document.getElementById('highlights');
+            hl.classList.remove('hidden');
+
+            const t1Logo = document.getElementById('viewer-team1-logo');
+            const t2Logo = document.getElementById('viewer-team2-logo');
+            if (data.team1Logo) { t1Logo.src = data.team1Logo; t1Logo.style.display = 'block'; } else { t1Logo.style.display = 'none'; }
+            if (data.team2Logo) { t2Logo.src = data.team2Logo; t2Logo.style.display = 'block'; } else { t2Logo.style.display = 'none'; }
+
+            document.getElementById('viewer-team1-name').textContent = data.team1Name || 'SLYTHERINE';
+            document.getElementById('viewer-team2-name').textContent = data.team2Name || 'GRIFFINDOR';
+            const team1Bg = data.team1BgColor || '#2563eb';
+            const team2Bg = data.team2BgColor || '#dc2626';
+            document.getElementById('viewer-team1-banner').style.backgroundColor = team1Bg;
+            document.getElementById('viewer-team2-banner').style.backgroundColor = team2Bg;
+            document.getElementById('viewer-team1-name').style.color = data.team1TextColor || '#ffffff';
+            document.getElementById('viewer-team2-name').style.color = data.team2TextColor || '#ffffff';
+            // Match score bar colors to banner colors
+            const t1Bar1El = document.getElementById('viewer-team1-score-bar-1');
+            const t1Bar2El = document.getElementById('viewer-team1-score-bar-2');
+            const t2Bar1El = document.getElementById('viewer-team2-score-bar-1');
+            const t2Bar2El = document.getElementById('viewer-team2-score-bar-2');
+            if (t1Bar1El) t1Bar1El.style.backgroundColor = team1Bg;
+            if (t1Bar2El) t1Bar2El.style.backgroundColor = team1Bg;
+            if (t2Bar1El) t2Bar1El.style.backgroundColor = team2Bg;
+            if (t2Bar2El) t2Bar2El.style.backgroundColor = team2Bg;
+            const t1Score = Math.max(0, Math.min(2, Number(data.team1Score) || 0));
+            const t2Score = Math.max(0, Math.min(2, Number(data.team2Score) || 0));
+            const t1Bar1 = document.getElementById('viewer-team1-score-bar-1');
+            const t1Bar2 = document.getElementById('viewer-team1-score-bar-2');
+            const t2Bar1 = document.getElementById('viewer-team2-score-bar-1');
+            const t2Bar2 = document.getElementById('viewer-team2-score-bar-2');
+            if (t1Bar1) t1Bar1.style.width = (t1Score >= 1 ? '100%' : '0%');
+            if (t1Bar2) t1Bar2.style.width = (t1Score >= 2 ? '100%' : '0%');
+            if (t2Bar1) t2Bar1.style.width = (t2Score >= 1 ? '100%' : '0%');
+            if (t2Bar2) t2Bar2.style.width = (t2Score >= 2 ? '100%' : '0%');
+
+            const video = document.getElementById('viewer-video');
+            const placeholder = document.getElementById('video-placeholder');
+            if (data.video) { video.src = data.video; video.style.display = 'block'; placeholder.style.display = 'none'; }
+            else { video.removeAttribute('src'); video.style.display = 'none'; placeholder.style.display = 'block'; }
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            clearAll();
+            if (channel) { channel.onmessage = onIncoming; }
+            setupStorageFallback();
+            try {
+                const raw = localStorage.getItem('codm-stream-last');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.type === 'highlights') { window.__lastAppliedTs = data.ts; onIncoming(data); }
+                }
+            } catch {}
+        });
+    </script>
+</head>
+<body class="min-h-screen text-white">
+    <div class="flex flex-col h-screen">
+        <div class="flex-1 flex items-center justify-center">
+            <div id="no-content" class="text-gray-500 text-center">
+                <svg class="w-24 h-24 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg>
+                <p class="text-lg">Waiting for highlights...</p>
+            </div>
+
+            <div id="highlights" class="hidden w-screen h-screen">
+                <div class="relative overflow-hidden w-full h-full bg-[url(/src/img/highlights-bg.png)] bg-center bg-cover flex flex-col items-center justify-center">
+                    <div class="flex items-start justify-between px-12 pb-8 w-full max-w-6xl mx-auto">
+                        <div class="flex flex-col items-center mt-6">
+                            <div class="relative w-36 h-40">
+                                <div class="absolute inset-0 ">
+                                    <div class="absolute rounded-sm inset-2 bg-[url(/src/img/team-bg.png)] flex items-center justify-center">
+                                        <img id="viewer-team1-logo" class="object-cover w-1/2 h-1/2 rounded-sm" alt="Team 1 Logo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="viewer-team1-banner" class="flex items-center justify-center w-[127px] h-8 -mt-2 mb-2" style="background-color: #2563eb;">
+                                <span id="viewer-team1-name" class="font-bold tracking-wide font-[Sportize] text-xl" style="color: #ffffff;">SLYTHERINE</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex w-24 h-1 space-x-2">
+                                    <div class="flex-1 overflow-hidden bg-white border border-gray-400">
+                                        <div id="viewer-team1-score-bar-1" class="h-full transition-all duration-300" style="width: 0%; background-color: #2563eb;"></div>
+                                    </div>
+                                    <div class="flex-1 overflow-hidden bg-white border border-gray-400">
+                                        <div id="viewer-team1-score-bar-2" class="h-full transition-all duration-300" style="width: 0%; background-color: #2563eb;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <img class="w-56" src="/src/img/LOGO-meta2025.png" alt="">
+                        </div>
+                        <div class="flex flex-col items-center mt-6">
+                            <div class="relative w-36 h-40">
+                                <div class="absolute inset-0">
+                                    <div class="absolute rounded-sm inset-2 bg-[url(/src/img/team-bg.png)] flex items-center justify-center">
+                                        <img id="viewer-team2-logo" class="object-cover w-1/2 h-1/2 rounded-sm" alt="Team 2 Logo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="viewer-team2-banner" class="flex items-center justify-center w-[127px] h-8 -mt-2 mb-2" style="background-color: #dc2626;">
+                                <span id="viewer-team2-name" class="text-xl font-bold tracking-wide font-[Sportize]" style="color: #ffffff;">GRIFFINDOR</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex w-24 h-1 space-x-2">
+                                    <div class="flex-1 overflow-hidden bg-white border border-gray-400">
+                                        <div id="viewer-team2-score-bar-1" class="h-full transition-all duration-300" style="width: 0%; background-color: #dc2626;"></div>
+                                    </div>
+                                    <div class="flex-1 overflow-hidden bg-white border border-gray-400">
+                                        <div id="viewer-team2-score-bar-2" class="h-full transition-all duration-300" style="width: 0%; background-color: #dc2626;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-12 pb-8 w-full max-w-[90rem] mx-auto">
+                        <div class="flex items-center justify-center w-full bg-white border border-gray-400 h-[540px] md:h-[620px]">
+                            <video id="viewer-video" class="w-full h-full rounded-sm" autoplay controls style="display: none;">Your browser does not support the video tag.</video>
+                            <div id="video-placeholder" class="text-center text-gray-500">
+                                <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
+                                <p class="text-lg">No video selected</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pb-16 flex items-center justify-center">
+                        <img class="w-72" src="/src/img/highlights.png" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

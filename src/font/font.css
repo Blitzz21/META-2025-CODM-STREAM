@@ -1,0 +1,12 @@
+@font-face {
+    font-family: 'Sportize';
+    src: url('sportize-personal-use.regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+
+.font {
+    font-family: 'Sportize', sans-serif;
+}

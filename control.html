@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Control Panels</title>
+</head>
+<body class="min-h-screen text-white bg-gray-900">
+    <div class="flex items-center justify-center h-screen p-6">
+        <div class="grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
+            <a href="control-stats.html" class="flex flex-col items-center justify-center p-8 transition-transform border border-gray-700 rounded-xl bg-gray-800/60 hover:scale-[1.02] hover:bg-gray-800">
+                <svg class="w-16 h-16 mb-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h14a1 1 0 001-1V4a1 1 0 00-1-1H3zm2 3a1 1 0 000 2h2a1 1 0 100-2H5zm0 4a1 1 0 100 2h4a1 1 0 100-2H5zm0 4a1 1 0 100 2h8a1 1 0 100-2H5z" clip-rule="evenodd"></path></svg>
+                <h2 class="text-xl font-semibold">Match Statistics Control</h2>
+                <p class="mt-2 text-sm text-gray-400 text-center">Upload and broadcast match stats image</p>
+            </a>
+            <a href="control-highlights.html" class="flex flex-col items-center justify-center p-8 transition-transform border border-gray-700 rounded-xl bg-gray-800/60 hover:scale-[1.02] hover:bg-gray-800">
+                <svg class="w-16 h-16 mb-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 17a1 1 0 01-.447-.105l-4-2A1 1 0 016 14V6a1 1 0 01.553-.894l4-2A1 1 0 0112 4v12a1 1 0 01-1 1zM4 6a2 2 0 012-2v12a2 2 0 01-2-2V6zm10-2a2 2 0 012 2v8a2 2 0 01-2 2V4z"></path></svg>
+                <h2 class="text-xl font-semibold">Highlights Control</h2>
+                <p class="mt-2 text-sm text-gray-400 text-center">Configure teams and video, then broadcast</p>
+            </a>
+            <a href="index.html" class="md:col-span-2 text-center text-sm text-gray-400 hover:text-gray-300">Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>CODM Control</title>
+    <style>
+        .slider::-webkit-slider-thumb { appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .slider::-moz-range-thumb { height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    </style>
+    <script>
+        // Fallback broadcast: use BroadcastChannel when available, else use localStorage events
+        const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('codm-stream') : null;
+        function broadcast(message) {
+            const payload = { ...message, ts: Date.now() };
+            if (channel) {
+                channel.postMessage(payload);
+            } else {
+                localStorage.setItem('codm-stream-message', JSON.stringify(payload));
+                // Trigger storage event for other tabs
+                setTimeout(() => localStorage.removeItem('codm-stream-message'), 0);
+            }
+            // Persist latest payload for polling-based viewers (works under file://)
+            try { localStorage.setItem('codm-stream-last', JSON.stringify(payload)); } catch {}
+        }
+    </script>
+</head>
+<body class="min-h-screen text-white bg-gray-900">
+    <div class="flex h-screen">
+        <div class="p-6 overflow-y-auto bg-gray-800 border-r border-gray-700 w-80">
+            <div class="mb-4 flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-blue-400">Control</h1>
+                <a href="viewer.html" class="px-3 py-1 text-sm bg-gray-700 rounded hover:bg-gray-600">Open Viewer</a>
+            </div>
+
+            <div class="mb-6">
+                <h2 class="mb-3 text-lg font-semibold">Control Panels</h2>
+                <div class="space-y-2">
+                    <button id="match-stats-btn" class="w-full px-4 py-2 text-left transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">Match Statistics</button>
+                    <button id="match-highlights-btn" class="w-full px-4 py-2 text-left transition-colors bg-gray-700 rounded-lg hover:bg-gray-600">Match Highlights</button>
+                    <button class="w-full px-4 py-2 text-left transition-colors bg-gray-700 rounded-lg opacity-50 hover:bg-gray-600" disabled>More Panels Coming Soon...</button>
+                </div>
+            </div>
+
+            <div id="match-stats-panel" class="control-panel">
+                <h3 class="mb-4 text-lg font-semibold">Match Statistics</h3>
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-medium">Upload Match Statistics Image</label>
+                    <div class="p-6 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-blue-500">
+                        <input type="file" id="match-stats-upload" accept="image/*" class="hidden">
+                        <button id="upload-btn" class="px-4 py-2 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">Choose Image</button>
+                        <p class="mt-2 text-sm text-gray-400">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                </div>
+                <div id="image-preview" class="hidden mb-4">
+                    <label class="block mb-2 text-sm font-medium">Preview</label>
+                    <div class="p-4 bg-gray-700 rounded-lg">
+                        <img id="preview-img" class="h-auto max-w-full rounded" alt="Preview">
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <button id="send-to-viewer" class="w-full px-4 py-2 transition-colors bg-green-600 rounded-lg hover:bg-green-700">Send to Viewer</button>
+                    <button id="clear-image" class="w-full px-4 py-2 transition-colors bg-red-600 rounded-lg hover:bg-red-700">Clear Image</button>
+                </div>
+            </div>
+
+            <div id="match-highlights-panel" class="hidden control-panel">
+                <h3 class="mb-4 text-lg font-semibold">Match Highlights</h3>
+                <div class="mb-6">
+                    <h4 class="mb-3 text-sm font-medium text-blue-400">Team 1</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block mb-2 text-xs font-medium">Team 1 Logo</label>
+                            <div class="p-3 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-blue-500">
+                                <input type="file" id="team1-logo-upload" accept="image/*" class="hidden">
+                                <button id="team1-upload-btn" class="px-3 py-1 text-xs transition-colors bg-blue-600 rounded hover:bg-blue-700">Choose Logo</button>
+                            </div>
+                            <div id="team1-logo-preview" class="hidden mt-2">
+                                <img id="team1-preview-img" class="w-16 h-16 mx-auto rounded" alt="Team 1 Logo">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-xs font-medium">Team 1 Name</label>
+                            <input type="text" id="team1-name" value="SLYTHERINE" class="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block mb-1 text-xs font-medium">Name Background</label>
+                                <input type="color" id="team1-bg-color" value="#2563eb" class="w-full h-8 border border-gray-600 rounded">
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-xs font-medium">Name Text</label>
+                                <input type="color" id="team1-text-color" value="#ffffff" class="w-full h-8 border border-gray-600 rounded">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-xs font-medium">Team 1 Score (0-2)</label>
+                            <input type="range" id="team1-score" min="0" max="2" value="0" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider">
+                            <div class="flex justify-between mt-1 text-xs text-gray-400"><span>0</span><span>1</span><span>2</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h4 class="mb-3 text-sm font-medium text-red-400">Team 2</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block mb-2 text-xs font-medium">Team 2 Logo</label>
+                            <div class="p-3 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-red-500">
+                                <input type="file" id="team2-logo-upload" accept="image/*" class="hidden">
+                                <button id="team2-upload-btn" class="px-3 py-1 text-xs transition-colors bg-red-600 rounded hover:bg-red-700">Choose Logo</button>
+                            </div>
+                            <div id="team2-logo-preview" class="hidden mt-2">
+                                <img id="team2-preview-img" class="w-16 h-16 mx-auto rounded" alt="Team 2 Logo">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-xs font-medium">Team 2 Name</label>
+                            <input type="text" id="team2-name" value="GRIFFINDOR" class="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-lg focus:border-red-500 focus:outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block mb-1 text-xs font-medium">Name Background</label>
+                                <input type="color" id="team2-bg-color" value="#dc2626" class="w-full h-8 border border-gray-600 rounded">
+                            </div>
+                            <div>
+                                <label class="block mb-1 text-xs font-medium">Name Text</label>
+                                <input type="color" id="team2-text-color" value="#ffffff" class="w-full h-8 border border-gray-600 rounded">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-xs font-medium">Team 2 Score (0-2)</label>
+                            <input type="range" id="team2-score" min="0" max="2" value="0" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider">
+                            <div class="flex justify-between mt-1 text-xs text-gray-400"><span>0</span><span>1</span><span>2</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-medium">Upload Highlight Video</label>
+                    <div class="p-6 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-purple-500">
+                        <input type="file" id="highlight-video-upload" accept="video/*" class="hidden">
+                        <button id="video-upload-btn" class="px-4 py-2 transition-colors bg-purple-600 rounded-lg hover:bg-purple-700">Choose Video</button>
+                        <p class="mt-2 text-sm text-gray-400">MP4, MOV, AVI up to 100MB</p>
+                    </div>
+                    <div id="video-preview" class="hidden mt-4">
+                        <label class="block mb-2 text-sm font-medium">Preview</label>
+                        <video id="preview-video" class="w-full rounded-lg" controls> Your browser does not support the video tag. </video>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <button id="send-highlights-to-viewer" class="w-full px-4 py-2 transition-colors bg-green-600 rounded-lg hover:bg-green-700">Send to Viewer</button>
+                    <button id="clear-highlights" class="w-full px-4 py-2 transition-colors bg-red-600 rounded-lg hover:bg-red-700">Clear All</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 p-6">
+            <div class="p-4 bg-gray-800 border border-gray-700 rounded">
+                <h2 class="text-lg font-semibold">How to use</h2>
+                <ol class="mt-2 text-sm text-gray-300 list-decimal list-inside space-y-1">
+                    <li>Open the Viewer page in another window or monitor.</li>
+                    <li>Use these controls to send content to the Viewer in real time.</li>
+                </ol>
+                <div class="mt-3 text-sm"><a class="text-blue-400 underline" href="viewer.html" target="_blank">Open Viewer in new tab</a></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Control state
+        let currentImage = null;
+        let currentVideo = null;
+        let team1Logo = null;
+        let team2Logo = null;
+        let team1Score = 0;
+        let team2Score = 0;
+        let team1Name = 'SLYTHERINE';
+        let team2Name = 'GRIFFINDOR';
+        let team1BgColor = '#2563eb';
+        let team2BgColor = '#dc2626';
+        let team1TextColor = '#ffffff';
+        let team2TextColor = '#ffffff';
+        let currentPanel = 'match-stats';
+
+        // Elements
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileInput = document.getElementById('match-stats-upload');
+        const previewSection = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const sendToViewerBtn = document.getElementById('send-to-viewer');
+        const clearImageBtn = document.getElementById('clear-image');
+
+        const team1UploadBtn = document.getElementById('team1-upload-btn');
+        const team1FileInput = document.getElementById('team1-logo-upload');
+        const team1Preview = document.getElementById('team1-logo-preview');
+        const team1PreviewImg = document.getElementById('team1-preview-img');
+        const team1ScoreInput = document.getElementById('team1-score');
+        const team1NameInput = document.getElementById('team1-name');
+        const team1BgColorInput = document.getElementById('team1-bg-color');
+        const team1TextColorInput = document.getElementById('team1-text-color');
+
+        const team2UploadBtn = document.getElementById('team2-upload-btn');
+        const team2FileInput = document.getElementById('team2-logo-upload');
+        const team2Preview = document.getElementById('team2-logo-preview');
+        const team2PreviewImg = document.getElementById('team2-preview-img');
+        const team2ScoreInput = document.getElementById('team2-score');
+        const team2NameInput = document.getElementById('team2-name');
+        const team2BgColorInput = document.getElementById('team2-bg-color');
+        const team2TextColorInput = document.getElementById('team2-text-color');
+
+        const videoUploadBtn = document.getElementById('video-upload-btn');
+        const videoFileInput = document.getElementById('highlight-video-upload');
+        const videoPreview = document.getElementById('video-preview');
+        const previewVideo = document.getElementById('preview-video');
+        const sendHighlightsBtn = document.getElementById('send-highlights-to-viewer');
+        const clearHighlightsBtn = document.getElementById('clear-highlights');
+
+        const matchStatsBtn = document.getElementById('match-stats-btn');
+        const matchHighlightsBtn = document.getElementById('match-highlights-btn');
+        const matchStatsPanel = document.getElementById('match-stats-panel');
+        const matchHighlightsPanel = document.getElementById('match-highlights-panel');
+
+        function switchPanel(panel) {
+            currentPanel = panel;
+            matchStatsBtn.className = panel === 'match-stats' ? 'w-full px-4 py-2 text-left transition-colors bg-blue-600 rounded-lg hover:bg-blue-700' : 'w-full px-4 py-2 text-left transition-colors bg-gray-700 rounded-lg hover:bg-gray-600';
+            matchHighlightsBtn.className = panel === 'match-highlights' ? 'w-full px-4 py-2 text-left transition-colors bg-blue-600 rounded-lg hover:bg-blue-700' : 'w-full px-4 py-2 text-left transition-colors bg-gray-700 rounded-lg hover:bg-gray-600';
+            if (panel === 'match-stats') { matchStatsPanel.classList.remove('hidden'); matchHighlightsPanel.classList.add('hidden'); }
+            else { matchStatsPanel.classList.add('hidden'); matchHighlightsPanel.classList.remove('hidden'); }
+        }
+
+        matchStatsBtn.addEventListener('click', () => switchPanel('match-stats'));
+        matchHighlightsBtn.addEventListener('click', () => switchPanel('match-highlights'));
+
+        // Match Stats
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                currentImage = ev.target.result;
+                previewImg.src = currentImage;
+                previewSection.classList.remove('hidden');
+                sendToViewerBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        });
+        sendToViewerBtn.addEventListener('click', () => {
+            if (!currentImage) return;
+            broadcast({ type: 'match-stats', image: currentImage });
+        });
+        clearImageBtn.addEventListener('click', () => {
+            currentImage = null; fileInput.value = ''; previewSection.classList.add('hidden'); sendToViewerBtn.disabled = true;
+            broadcast({ type: 'clear' });
+        });
+
+        // Highlights
+        team1UploadBtn.addEventListener('click', () => team1FileInput.click());
+        team1FileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader(); reader.onload = (ev) => { team1Logo = ev.target.result; team1PreviewImg.src = team1Logo; team1Preview.classList.remove('hidden'); }; reader.readAsDataURL(file);
+        });
+        team2UploadBtn.addEventListener('click', () => team2FileInput.click());
+        team2FileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader(); reader.onload = (ev) => { team2Logo = ev.target.result; team2PreviewImg.src = team2Logo; team2Preview.classList.remove('hidden'); }; reader.readAsDataURL(file);
+        });
+        videoUploadBtn.addEventListener('click', () => videoFileInput.click());
+        videoFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            currentVideo = URL.createObjectURL(file);
+            previewVideo.src = currentVideo; videoPreview.classList.remove('hidden'); sendHighlightsBtn.disabled = false;
+        });
+
+        function sendHighlights() {
+            const payload = {
+                type: 'highlights',
+                team1Logo, team2Logo, team1Name, team2Name,
+                team1BgColor, team2BgColor, team1TextColor, team2TextColor,
+                team1Score, team2Score,
+                video: currentVideo
+            };
+            broadcast(payload);
+        }
+
+        // Inputs
+        team1NameInput.addEventListener('input', (e) => { team1Name = e.target.value.toUpperCase(); });
+        team1BgColorInput.addEventListener('input', (e) => { team1BgColor = e.target.value; });
+        team1TextColorInput.addEventListener('input', (e) => { team1TextColor = e.target.value; });
+        team2NameInput.addEventListener('input', (e) => { team2Name = e.target.value.toUpperCase(); });
+        team2BgColorInput.addEventListener('input', (e) => { team2BgColor = e.target.value; });
+        team2TextColorInput.addEventListener('input', (e) => { team2TextColor = e.target.value; });
+        team1ScoreInput.addEventListener('input', (e) => { team1Score = parseInt(e.target.value) || 0; });
+        team2ScoreInput.addEventListener('input', (e) => { team2Score = parseInt(e.target.value) || 0; });
+
+        sendHighlightsBtn.addEventListener('click', sendHighlights);
+        clearHighlightsBtn.addEventListener('click', () => {
+            team1Logo = null; team2Logo = null; currentVideo = null; team1Score = 0; team2Score = 0;
+            team1Name = 'SLYTHERINE'; team2Name = 'GRIFFINDOR'; team1BgColor = '#2563eb'; team2BgColor = '#dc2626'; team1TextColor = '#ffffff'; team2TextColor = '#ffffff';
+            team1FileInput.value = ''; team2FileInput.value = ''; videoFileInput.value = '';
+            team1ScoreInput.value = '0'; team2ScoreInput.value = '0'; team1NameInput.value = 'SLYTHERINE'; team2NameInput.value = 'GRIFFINDOR';
+            team1BgColorInput.value = '#2563eb'; team2BgColorInput.value = '#dc2626'; team1TextColorInput.value = '#ffffff'; team2TextColorInput.value = '#ffffff';
+            document.getElementById('team1-logo-preview').classList.add('hidden');
+            document.getElementById('team2-logo-preview').classList.add('hidden');
+            document.getElementById('video-preview').classList.add('hidden');
+            broadcast({ type: 'clear' });
+        });
+
+        // Init
+        sendToViewerBtn.disabled = true;
+        sendHighlightsBtn.disabled = true;
+        switchPanel('match-stats');
+    </script>
+</body>
+</html>
+
+

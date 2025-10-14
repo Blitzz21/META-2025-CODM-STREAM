@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Control - Match Statistics</title>
+    <style> body { overflow: hidden; } </style>
+</head>
+<body class="min-h-screen text-white bg-gray-900">
+    <div class="flex flex-col h-screen">
+        <div class="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700">
+            <h1 class="text-lg font-semibold">Match Statistics Control</h1>
+            <div class="space-x-2 text-sm">
+                <a href="index.html" class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600">Home</a>
+                <a href="control.html" class="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700">All Controls</a>
+                <a href="viewers.html" class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600">Viewers</a>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-center flex-1 p-6">
+            <div class="w-full max-w-xl">
+                <div class="mb-6">
+                    <label class="block mb-2 text-sm font-medium">Upload Match Statistics Image</label>
+                    <div class="p-6 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-blue-500">
+                        <input type="file" id="match-stats-upload" accept="image/*" class="hidden">
+                        <button id="upload-btn" class="px-4 py-2 transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">Choose Image</button>
+                        <p class="mt-2 text-sm text-gray-400">PNG, JPG up to 10MB</p>
+                    </div>
+                </div>
+
+                <div id="image-preview" class="hidden mb-4">
+                    <label class="block mb-2 text-sm font-medium">Preview</label>
+                    <div class="p-4 bg-gray-800 rounded-lg">
+                        <img id="preview-img" class="h-auto max-w-full rounded" alt="Preview">
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button id="send-to-viewer" class="flex-1 px-4 py-2 transition-colors bg-green-600 rounded-lg hover:bg-green-700" disabled>Send to Viewer</button>
+                    <button id="clear-image" class="flex-1 px-4 py-2 transition-colors bg-red-600 rounded-lg hover:bg-red-700" disabled>Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('codm-stream') : null;
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileInput = document.getElementById('match-stats-upload');
+        const previewSection = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const sendBtn = document.getElementById('send-to-viewer');
+        const clearBtn = document.getElementById('clear-image');
+
+        let currentImage = null;
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                currentImage = ev.target.result;
+                previewImg.src = currentImage;
+                previewSection.classList.remove('hidden');
+                sendBtn.disabled = false;
+                clearBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function broadcast(payload) {
+            if (channel) channel.postMessage(payload);
+            try {
+                localStorage.setItem('codm-stream-message', JSON.stringify(payload));
+                localStorage.setItem('codm-stream-last', JSON.stringify(payload));
+            } catch {}
+        }
+
+        sendBtn.addEventListener('click', () => {
+            if (!currentImage) return;
+            const payload = { type: 'match-stats', image: currentImage, ts: Date.now() };
+            broadcast(payload);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            currentImage = null;
+            fileInput.value = '';
+            previewSection.classList.add('hidden');
+            sendBtn.disabled = true;
+            clearBtn.disabled = true;
+            broadcast({ type: 'clear', ts: Date.now() });
+        });
+    </script>
+</body>
+</html>
+
