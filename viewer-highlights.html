@@ -38,8 +38,30 @@
             }, 500);
         }
         function clearAll() {
-            document.getElementById('no-content').classList.remove('hidden');
-            document.getElementById('highlights').classList.add('hidden');
+            // show default frame instead of blank
+            document.getElementById('no-content').classList.add('hidden');
+            const hl = document.getElementById('highlights');
+            hl.classList.remove('hidden');
+            // defaults
+            document.getElementById('viewer-team1-name').textContent = 'SLYTHERINE';
+            document.getElementById('viewer-team2-name').textContent = 'GRIFFINDOR';
+            document.getElementById('viewer-team1-banner').style.backgroundColor = '#2563eb';
+            document.getElementById('viewer-team2-banner').style.backgroundColor = '#dc2626';
+            const t1Bar1El = document.getElementById('viewer-team1-score-bar-1');
+            const t1Bar2El = document.getElementById('viewer-team1-score-bar-2');
+            const t2Bar1El = document.getElementById('viewer-team2-score-bar-1');
+            const t2Bar2El = document.getElementById('viewer-team2-score-bar-2');
+            if (t1Bar1El) t1Bar1El.style.width = '0%';
+            if (t1Bar2El) t1Bar2El.style.width = '0%';
+            if (t2Bar1El) t2Bar1El.style.width = '0%';
+            if (t2Bar2El) t2Bar2El.style.width = '0%';
+            document.getElementById('video-placeholder').style.display = 'block';
+            const video = document.getElementById('viewer-video');
+            video.removeAttribute('src');
+            video.style.display = 'none';
+            // hide logos until uploaded
+            document.getElementById('viewer-team1-logo').style.display = 'none';
+            document.getElementById('viewer-team2-logo').style.display = 'none';
         }
         function showHighlights(data) {
             document.getElementById('no-content').classList.add('hidden');
@@ -95,6 +117,24 @@
                     if (data.type === 'highlights') { window.__lastAppliedTs = data.ts; onIncoming(data); }
                 }
             } catch {}
+
+            // Custom controls: toggle play/pause and reset to start, no native UI
+            const videoEl = document.getElementById('viewer-video');
+            if (videoEl) {
+                const toggle = () => {
+                    if (videoEl.paused) { videoEl.play().catch(() => {}); }
+                    else { videoEl.pause(); }
+                };
+                const resetToStart = () => { videoEl.currentTime = 0; };
+                videoEl.addEventListener('click', toggle);
+                videoEl.addEventListener('touchstart', toggle, { passive: true });
+                videoEl.addEventListener('dblclick', resetToStart);
+                window.addEventListener('keydown', (e) => {
+                    const key = e.key?.toLowerCase();
+                    if (key === ' ' || key === 'k') { e.preventDefault(); toggle(); }
+                    if (key === 'home' || key === '0') { e.preventDefault(); resetToStart(); }
+                });
+            }
         });
     </script>
 </head>
@@ -159,7 +199,7 @@
                     </div>
                     <div class="px-12 pb-8 w-full max-w-[90rem] mx-auto">
                         <div class="flex items-center justify-center w-full bg-white border border-gray-400 h-[540px] md:h-[620px]">
-                            <video id="viewer-video" class="w-full h-full rounded-sm" autoplay controls style="display: none;">Your browser does not support the video tag.</video>
+                            <video id="viewer-video" class="w-full h-full rounded-sm object-cover cursor-pointer" autoplay playsinline style="display: none;">Your browser does not support the video tag.</video>
                             <div id="video-placeholder" class="text-center text-gray-500">
                                 <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
                                 <p class="text-lg">No video selected</p>

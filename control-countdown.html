@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Control - Countdown</title>
+    <style> body { overflow: hidden; } </style>
+</head>
+<body class="min-h-screen text-white bg-gray-900">
+    <div class="flex flex-col h-screen">
+        <div class="flex items-center justify-between px-6 py-4 bg-gray-800 border-b border-gray-700">
+            <h1 class="text-2xl font-semibold">Countdown Control</h1>
+            <div class="space-x-3 text-base">
+                <a href="index.html" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Home</a>
+                <a href="control.html" class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">All Controls</a>
+                <a href="viewers.html" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Viewers</a>
+            </div>
+        </div>
+
+        <div class="flex items-start justify-center flex-1 p-8 overflow-auto">
+            <div class="grid w-full max-w-6xl grid-cols-1 gap-8 md:grid-cols-2">
+                <div class="space-y-6">
+                    <h2 class="text-xl font-semibold text-blue-400">Left Team</h2>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Team Name (Left)</label>
+                        <input id="left-team-name" class="w-full px-4 py-3 text-lg bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500" value="SLYTHERIN">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block mb-1 text-sm font-medium">Name Background</label>
+                            <input id="left-name-bg" type="color" value="#1d4ed8" class="w-full h-12 border border-gray-700 rounded">
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-sm font-medium">Name Text</label>
+                            <input id="left-name-text" type="color" value="#ffffff" class="w-full h-12 border border-gray-700 rounded">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Team Logo (Left)</label>
+                        <div class="p-6 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-blue-500">
+                            <input type="file" id="left-logo-file" accept="image/*" class="hidden">
+                            <button id="left-logo-btn" class="px-5 py-3 text-base transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">Choose Logo</button>
+                        </div>
+                        <div id="left-logo-preview" class="hidden mt-2">
+                            <img id="left-logo-img" class="w-20 h-20 mx-auto rounded" alt="Left Logo">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Players (Left) — up to 5</label>
+                        <div class="p-6 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-blue-500">
+                            <input type="file" id="left-players-file" accept="image/*" class="hidden" multiple>
+                            <button id="left-players-btn" class="px-5 py-3 text-base transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">Choose Players</button>
+                        </div>
+                        <div id="left-players-preview" class="mt-3 grid grid-cols-5 gap-2"></div>
+                        <div class="flex gap-2 mt-2">
+                            <button id="left-prev" class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600">Prev</button>
+                            <button id="left-next" class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <h2 class="text-xl font-semibold text-red-400">Right Team</h2>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Team Name (Right)</label>
+                        <input id="right-team-name" class="w-full px-4 py-3 text-lg bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-red-500" value="GRYFFINDOR">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block mb-1 text-sm font-medium">Name Background</label>
+                            <input id="right-name-bg" type="color" value="#b91c1c" class="w-full h-12 border border-gray-700 rounded">
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-sm font-medium">Name Text</label>
+                            <input id="right-name-text" type="color" value="#ffffff" class="w-full h-12 border border-gray-700 rounded">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Team Logo (Right)</label>
+                        <div class="p-6 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-red-500">
+                            <input type="file" id="right-logo-file" accept="image/*" class="hidden">
+                            <button id="right-logo-btn" class="px-5 py-3 text-base transition-colors bg-red-600 rounded-lg hover:bg-red-700">Choose Logo</button>
+                        </div>
+                        <div id="right-logo-preview" class="hidden mt-2">
+                            <img id="right-logo-img" class="w-20 h-20 mx-auto rounded" alt="Right Logo">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium">Players (Right) — up to 5</label>
+                        <div class="p-6 text-center transition-colors border-2 border-gray-600 border-dashed rounded-lg hover:border-red-500">
+                            <input type="file" id="right-players-file" accept="image/*" class="hidden" multiple>
+                            <button id="right-players-btn" class="px-5 py-3 text-base transition-colors bg-red-600 rounded-lg hover:bg-red-700">Choose Players</button>
+                        </div>
+                        <div id="right-players-preview" class="mt-3 grid grid-cols-5 gap-2"></div>
+                        <div class="flex gap-2 mt-2">
+                            <button id="right-prev" class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600">Prev</button>
+                            <button id="right-next" class="px-3 py-2 bg-gray-700 rounded hover:bg-gray-600">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold text-amber-400">Countdown</h2>
+                        <div class="grid grid-cols-3 gap-3 items-end">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium">Minutes</label>
+                                <input id="minutes" type="number" min="0" max="59" value="0" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium">Seconds</label>
+                                <input id="seconds" type="number" min="0" max="59" value="30" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium">Show Title</label>
+                                <input id="show-title" type="checkbox" class="w-5 h-5">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 items-end">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium">Rotate (sec)</label>
+                                <input id="rotate-seconds" type="number" min="2" max="120" value="6" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg">
+                            </div>
+                            <div class="col-span-2 flex items-center gap-3">
+                                <input id="auto-rotate" type="checkbox" class="w-5 h-5" checked>
+                                <span class="text-sm text-gray-300">Auto-rotate players</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-3">
+                            <button id="start-btn" class="px-5 py-3 bg-blue-600 rounded hover:bg-blue-700">Start</button>
+                            <button id="pause-btn" class="px-5 py-3 bg-gray-600 rounded hover:bg-gray-700">Pause</button>
+                            <button id="reset-btn" class="px-5 py-3 bg-purple-600 rounded hover:bg-purple-700">Reset</button>
+                        </div>
+                    </div>
+
+                    
+                </div>
+
+                <div class="md:col-span-2">
+                    <div class="p-4 bg-gray-800 border border-gray-700 rounded">
+                        <p class="text-sm text-gray-300">Open the <a href="viewer-countdown.html" class="underline text-blue-400" target="_blank">Countdown Viewer</a> in another window. All controls broadcast in real time.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('codm-stream') : null;
+        function broadcast(payload){
+            const withTs = { ...payload, ts: Date.now() };
+            if (channel) channel.postMessage(withTs);
+            try { localStorage.setItem('codm-stream-message', JSON.stringify(withTs)); localStorage.setItem('codm-stream-last', JSON.stringify(withTs)); } catch {}
+        }
+
+        // Elements
+        const leftTeamName = document.getElementById('left-team-name');
+        const rightTeamName = document.getElementById('right-team-name');
+        const leftLogoBtn = document.getElementById('left-logo-btn');
+        const rightLogoBtn = document.getElementById('right-logo-btn');
+        const leftLogoFile = document.getElementById('left-logo-file');
+        const rightLogoFile = document.getElementById('right-logo-file');
+        const leftLogoPreview = document.getElementById('left-logo-preview');
+        const rightLogoPreview = document.getElementById('right-logo-preview');
+        const leftLogoImg = document.getElementById('left-logo-img');
+        const rightLogoImg = document.getElementById('right-logo-img');
+
+        const leftPlayersBtn = document.getElementById('left-players-btn');
+        const rightPlayersBtn = document.getElementById('right-players-btn');
+        const leftPlayersFile = document.getElementById('left-players-file');
+        const rightPlayersFile = document.getElementById('right-players-file');
+        const leftPlayersPreview = document.getElementById('left-players-preview');
+        const rightPlayersPreview = document.getElementById('right-players-preview');
+        const leftPrevBtn = document.getElementById('left-prev');
+        const leftNextBtn = document.getElementById('left-next');
+        const rightPrevBtn = document.getElementById('right-prev');
+        const rightNextBtn = document.getElementById('right-next');
+
+        const minutes = document.getElementById('minutes');
+        const seconds = document.getElementById('seconds');
+        const showTitle = document.getElementById('show-title');
+        const rotateSeconds = document.getElementById('rotate-seconds');
+        const autoRotate = document.getElementById('auto-rotate');
+        const leftNameBg = document.getElementById('left-name-bg');
+        const leftNameText = document.getElementById('left-name-text');
+        const rightNameBg = document.getElementById('right-name-bg');
+        const rightNameText = document.getElementById('right-name-text');
+
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+
+        let state = {
+            leftTeamName: 'SLYTHERIN',
+            rightTeamName: 'GRYFFINDOR',
+            leftLogo: null,
+            rightLogo: null,
+            leftPlayers: [],
+            rightPlayers: [],
+            leftIndex: 0,
+            rightIndex: 0,
+            durationMs: 30 * 1000,
+            showTitle: false,
+            rotateMs: 6000,
+            autoRotate: true,
+            leftNameBg: '#1d4ed8',
+            leftNameText: '#ffffff',
+            rightNameBg: '#b91c1c',
+            rightNameText: '#ffffff'
+        };
+
+        function durationFromInputs(){
+            const m = Math.max(0, parseInt(minutes.value||'0',10));
+            const s = Math.max(0, parseInt(seconds.value||'0',10));
+            return (m*60 + s) * 1000;
+        }
+
+        function sendConfig(){
+            broadcast({ type: 'countdown', action: 'config', ...state });
+        }
+
+        // File helpers
+        function bindImage(btn, input, previewEl, imgEl, key){
+            btn.addEventListener('click', () => input.click());
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => { state[key] = ev.target.result; imgEl.src = state[key]; previewEl.classList.remove('hidden'); sendConfig(); };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        bindImage(leftLogoBtn, leftLogoFile, leftLogoPreview, leftLogoImg, 'leftLogo');
+        bindImage(rightLogoBtn, rightLogoFile, rightLogoPreview, rightLogoImg, 'rightLogo');
+
+        function renderPlayerStrip(side){
+            const list = side==='left' ? state.leftPlayers : state.rightPlayers;
+            const wrap = side==='left' ? leftPlayersPreview : rightPlayersPreview;
+            wrap.innerHTML = '';
+            list.forEach((src, idx)=>{
+                const img = document.createElement('img');
+                img.src = src; img.alt = side+" "+idx; img.className = 'w-16 h-20 object-cover rounded border border-gray-700 cursor-pointer';
+                img.addEventListener('click', ()=> switchTo(side, idx));
+                wrap.appendChild(img);
+            });
+        }
+
+        function handlePlayers(files, side){
+            const arr = [];
+            const limit = Math.min(files.length, 5);
+            let loaded = 0;
+            for (let i=0;i<limit;i++){
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = (ev)=>{ arr.push(ev.target.result); loaded++; if (loaded===limit){ if(side==='left'){ state.leftPlayers = arr; state.leftIndex = 0; } else { state.rightPlayers = arr; state.rightIndex = 0; } renderPlayerStrip(side); sendConfig(); broadcast({ type: 'countdown', action: 'config', ...state }); } };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        leftPlayersBtn.addEventListener('click', ()=> leftPlayersFile.click());
+        rightPlayersBtn.addEventListener('click', ()=> rightPlayersFile.click());
+        leftPlayersFile.addEventListener('change', (e)=>{ if (e.target.files?.length) handlePlayers(e.target.files, 'left'); });
+        rightPlayersFile.addEventListener('change', (e)=>{ if (e.target.files?.length) handlePlayers(e.target.files, 'right'); });
+
+        function switchTo(side, index){
+            if (side==='left'){ state.leftIndex = Math.max(0, Math.min(index, state.leftPlayers.length-1)); }
+            else { state.rightIndex = Math.max(0, Math.min(index, state.rightPlayers.length-1)); }
+            broadcast({ type: 'countdown', action: 'switchPlayer', side, index });
+        }
+        leftPrevBtn.addEventListener('click', ()=>{ const n = Math.max(0, state.leftIndex-1); switchTo('left', n); });
+        leftNextBtn.addEventListener('click', ()=>{ const n = Math.min((state.leftPlayers.length-1)||0, state.leftIndex+1); switchTo('left', n); });
+        rightPrevBtn.addEventListener('click', ()=>{ const n = Math.max(0, state.rightIndex-1); switchTo('right', n); });
+        rightNextBtn.addEventListener('click', ()=>{ const n = Math.min((state.rightPlayers.length-1)||0, state.rightIndex+1); switchTo('right', n); });
+
+        leftTeamName.addEventListener('input', (e)=>{ state.leftTeamName = e.target.value.toUpperCase(); sendConfig(); });
+        rightTeamName.addEventListener('input', (e)=>{ state.rightTeamName = e.target.value.toUpperCase(); sendConfig(); });
+        minutes.addEventListener('input', ()=>{ state.durationMs = durationFromInputs(); sendConfig(); });
+        seconds.addEventListener('input', ()=>{ state.durationMs = durationFromInputs(); sendConfig(); });
+        showTitle.addEventListener('change', ()=>{ state.showTitle = !!showTitle.checked; sendConfig(); });
+        rotateSeconds.addEventListener('input', ()=>{ const s = Math.max(2, parseInt(rotateSeconds.value||'6',10)); state.rotateMs = s * 1000; sendConfig(); });
+        autoRotate.addEventListener('change', ()=>{ state.autoRotate = !!autoRotate.checked; sendConfig(); });
+        leftNameBg.addEventListener('input', (e)=>{ state.leftNameBg = e.target.value; sendConfig(); });
+        leftNameText.addEventListener('input', (e)=>{ state.leftNameText = e.target.value; sendConfig(); });
+        rightNameBg.addEventListener('input', (e)=>{ state.rightNameBg = e.target.value; sendConfig(); });
+        rightNameText.addEventListener('input', (e)=>{ state.rightNameText = e.target.value; sendConfig(); });
+
+        startBtn.addEventListener('click', ()=> broadcast({ type: 'countdown', action: 'start' }));
+        pauseBtn.addEventListener('click', ()=> broadcast({ type: 'countdown', action: 'pause' }));
+        resetBtn.addEventListener('click', ()=> broadcast({ type: 'countdown', action: 'reset' }));
+
+        // Marquee text is fixed in viewer; no controls here
+
+        // Initialize base config once
+        state.durationMs = durationFromInputs();
+        state.leftTeamName = leftTeamName.value.toUpperCase();
+        state.rightTeamName = rightTeamName.value.toUpperCase();
+        state.rotateMs = (parseInt(rotateSeconds.value||'6',10) * 1000);
+        state.autoRotate = !!autoRotate.checked;
+        state.leftNameBg = leftNameBg.value;
+        state.leftNameText = leftNameText.value;
+        state.rightNameBg = rightNameBg.value;
+        state.rightNameText = rightNameText.value;
+        sendConfig();
+    </script>
+</body>
+</html>
+
+

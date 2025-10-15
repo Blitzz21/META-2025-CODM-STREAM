@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/src/font/font.css">
+    <style>
+        .ticker { position: absolute; left: 0; bottom: 0; width: 100%; height: 48px; overflow: hidden; }
+        .ticker-inner { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker 30s linear infinite; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body class="w-dvw h-dvh relative text-white">
+    <!-- Background -->
+    <img class="absolute inset-0 w-full h-full object-cover object-center" src="/src/img/countdown-bg.png" alt="bg">
+
+    <!-- Hero composition (players left/right, crest center) -->
+    <div class="absolute inset-0 z-10 pointer-events-none">
+        <div class="w-full h-full flex items-center justify-between px-6 md:px-12">
+            <!-- Team 1 player slot -->
+            <img class="max-h-[70vh] object-contain select-none" src="/src/img/player1.png" alt="player left">
+
+            <!-- META 2025 Logo (crest) -->
+            <div class="flex flex-col items-center justify-center mx-4">
+                <img class="w-128 select-none" src="/src/img/LOGO.png" alt="META crest">
+                <div class="mt-3 text-[8rem] font-[Sportize] font-bold tracking-wide text-black/80">COUNTDOWN</div>
+            </div>
+
+            <!-- Team 2 player slot -->
+            <img class="max-h-[70vh] object-contain select-none" src="/src/img/player2.png" alt="player right">
+        </div>
+    </div>
+
+    <!-- Foreground strip (anchored to bottom, above marquee) -->
+    <div class="absolute left-0 w-full z-20" style="bottom: 48px;">
+        <div class="flex w-full items-stretch justify-between">
+            <!-- Left team banner -->
+            <div class="flex-1 min-w-0 bg-blue-700/95 py-6 px-10 flex items-center justify-center">
+                <span class="font-[Sportize] text-center tracking-wide text-4xl md:text-5xl">SLYTHERIN</span>
+            </div>
+
+            <!-- Left logo slot -->
+            <div class="w-40 bg-white flex items-center justify-center">
+                <img class="w-16 h-16 object-contain" src="/src/img/LOGO-meta2025.png" alt="left logo">
+            </div>
+
+            <!-- Center timer -->
+            <div class="w-80 bg-neutral-800 flex items-center justify-center">
+                <div class="font-[Sportize] text-6xl">00:00</div>
+            </div>
+
+            <!-- Right logo slot -->
+            <div class="w-40 bg-white flex items-center justify-center">
+                <img class="w-16 h-16 object-contain" src="/src/img/LOGO-meta2025.png" alt="right logo">
+            </div>
+
+            <!-- Right team banner -->
+            <div class="flex-1 min-w-0 bg-red-700/95 py-6 px-10 flex items-center justify-center">
+                <span class="font-[Sportize] text-center tracking-wide text-4xl md:text-5xl">GRYFFINDOR</span>
+            </div>
+        </div>
+    </div>
+    <!-- Marquee -->
+    <div class="ticker z-30 bg-black">
+        <div class="ticker-inner font-[Sportize] tracking-wide">
+            <span class="text-yellow-300 text-4xl">MARIAN ESPORTS TOURNAMENT ARENA 2025 </span> <span class="text-orange-400 text-4xl">| UNLEASH THE META |</span>
+        </div>
+    </div>
+</body>
+</html>

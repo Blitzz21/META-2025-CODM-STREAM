@@ -37,8 +37,8 @@
                 </div>
 
                 <div class="flex gap-3">
-                    <button id="send-to-viewer" class="flex-1 px-4 py-2 transition-colors bg-green-600 rounded-lg hover:bg-green-700" disabled>Send to Viewer</button>
-                    <button id="clear-image" class="flex-1 px-4 py-2 transition-colors bg-red-600 rounded-lg hover:bg-red-700" disabled>Clear</button>
+                    <button id="send-to-viewer" class="flex-1 px-4 py-2 transition-colors bg-green-600 rounded-lg hover:bg-green-700">Send to Viewer</button>
+                    <button id="clear-image" class="flex-1 px-4 py-2 transition-colors bg-red-600 rounded-lg hover:bg-red-700">Clear</button>
                 </div>
             </div>
         </div>
@@ -64,8 +64,7 @@
                 currentImage = ev.target.result;
                 previewImg.src = currentImage;
                 previewSection.classList.remove('hidden');
-                sendBtn.disabled = false;
-                clearBtn.disabled = false;
+                // keep buttons always enabled for default broadcast
             };
             reader.readAsDataURL(file);
         });
@@ -79,7 +78,6 @@
         }
 
         sendBtn.addEventListener('click', () => {
-            if (!currentImage) return;
             const payload = { type: 'match-stats', image: currentImage, ts: Date.now() };
             broadcast(payload);
         });
@@ -88,8 +86,7 @@
             currentImage = null;
             fileInput.value = '';
             previewSection.classList.add('hidden');
-            sendBtn.disabled = true;
-            clearBtn.disabled = true;
+            // buttons remain enabled for default frame
             broadcast({ type: 'clear', ts: Date.now() });
         });
     </script>

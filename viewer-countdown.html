@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/src/font/font.css">
+    <title>CODM Viewer - Countdown</title>
+    <style>
+        body { overflow: hidden; }
+        .slide-in-left { transform: translateX(-40px); opacity: 0; }
+        .slide-in-right { transform: translateX(40px); opacity: 0; }
+        .enter { transform: translateX(0); opacity: 1; }
+        .fade-out { opacity: 0; }
+        /* Marquee styles (HTML+CSS only) */
+        .marquee-wrap { position: absolute; left: 0; bottom: 0; width: 100%; color: #fff; background: #000; }
+        .fadeout-horizontal { mask-image: linear-gradient(to right, transparent, black 5rem, black calc(100% - 6rem), transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 5rem, black calc(100% - 6rem), transparent); }
+        .marquee-text { overflow: clip; }
+        .marquee-text-track { display: flex; padding-left: 4.8rem; gap: 1rem; width: max-content; animation: marquee-move-text var(--speed, 14s) linear infinite var(--direction, forwards); }
+        .marquee-text p { border-radius: 999px; font-family: Sportize; font-size: 2.2rem; letter-spacing: .02em; white-space: nowrap; }
+        .rotate-left { transform: rotate(0deg); }
+        .rotate-right { transform: rotate(0deg); }
+        @keyframes marquee-move-text { to { transform: translateX(-50%); } }
+    </style>
+    <script>
+        const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('codm-stream') : null;
+        let config = {
+            leftTeamName: 'SLYTHERIN', rightTeamName: 'GRYFFINDOR',
+            leftLogo: null, rightLogo: null, leftPlayer: null, rightPlayer: null,
+            durationMs: 30000, showTitle: false, marquee: '',
+            leftPlayers: [], rightPlayers: [], leftIndex: 0, rightIndex: 0,
+            rotateMs: 6000, autoRotate: true
+        };
+        let countdown = { remainingMs: 30000, running: false, visible: false, lastTick: 0 };
+        let rotateTimer = null;
+
+        function onIncoming(message){
+            const data = message?.data || message;
+            if (!data || data.type !== 'countdown') return;
+            if (data.action === 'config') { Object.assign(config, data); applyConfig(); return; }
+            // Always shown; ignore show/hide commands
+            if (data.action === 'start') { start(); return; }
+            if (data.action === 'pause') { pause(); return; }
+            if (data.action === 'reset') { reset(); return; }
+            // Marquee is fixed; ignore any marquee commands
+            if (data.action === 'switchPlayer') { switchPlayer(data.side, data.index); return; }
+        }
+
+        function setupStorageFallback(){
+            window.addEventListener('storage', (e)=>{
+                if (e.key === 'codm-stream-message' && e.newValue) {
+                    try { onIncoming(JSON.parse(e.newValue)); } catch {}
+                }
+            });
+            setInterval(()=>{
+                try {
+                    const raw = localStorage.getItem('codm-stream-last');
+                    if (!raw) return; const d = JSON.parse(raw);
+                    if (d.type === 'countdown') onIncoming(d);
+                } catch {}
+            }, 500);
+        }
+
+        function applyConfig(){
+            document.getElementById('left-name').textContent = config.leftTeamName || '';
+            document.getElementById('right-name').textContent = config.rightTeamName || '';
+            const leftBanner = document.getElementById('left-name-banner');
+            const rightBanner = document.getElementById('right-name-banner');
+            if (leftBanner && config.leftNameBg) leftBanner.style.backgroundColor = config.leftNameBg;
+            if (rightBanner && config.rightNameBg) rightBanner.style.backgroundColor = config.rightNameBg;
+            if (config.leftNameText) document.getElementById('left-name').style.color = config.leftNameText;
+            if (config.rightNameText) document.getElementById('right-name').style.color = config.rightNameText;
+            const leftLogo = document.getElementById('left-logo');
+            const rightLogo = document.getElementById('right-logo');
+            leftLogo.style.display = config.leftLogo ? 'block':'none'; if (config.leftLogo) leftLogo.src = config.leftLogo;
+            rightLogo.style.display = config.rightLogo ? 'block':'none'; if (config.rightLogo) rightLogo.src = config.rightLogo;
+            // player pools (optional)
+            if (!Array.isArray(config.leftPlayers)) config.leftPlayers = [];
+            if (!Array.isArray(config.rightPlayers)) config.rightPlayers = [];
+            if (typeof config.leftIndex !== 'number') config.leftIndex = 0;
+            if (typeof config.rightIndex !== 'number') config.rightIndex = 0;
+            setPlayer('left', config.leftPlayers[config.leftIndex]);
+            setPlayer('right', config.rightPlayers[config.rightIndex]);
+            countdown.remainingMs = config.durationMs || 0;
+            renderTime();
+            setMarquee();
+            document.getElementById('title').style.display = 'block';
+            setupRotation();
+        }
+
+        function show(){}
+        function hide(){}
+        function start(){ if (!countdown.running){ countdown.running = true; countdown.lastTick = performance.now(); tick(); } }
+        function pause(){ countdown.running = false; }
+        function reset(){ countdown.remainingMs = config.durationMs || 0; renderTime(); }
+        function setMarquee(){}
+
+        function setPlayer(side, src){
+            const el = side==='left' ? document.getElementById('left-hero') : document.getElementById('right-hero');
+            const container = el.parentElement;
+            const old = el;
+            // If no src, keep previous or hide placeholder
+            if (!src){ el.style.display = 'none'; return; }
+            const img = el.cloneNode();
+            img.src = src; img.style.display='block'; img.classList.add('opacity-0');
+            container.replaceChild(img, el);
+            img.id = el.id; // preserve id
+            requestAnimationFrame(()=>{
+                img.classList.add('transition-opacity','duration-500');
+                img.classList.remove('opacity-0');
+            });
+        }
+        function switchPlayer(side, index){
+            if (side==='left') { config.leftIndex = Math.max(0, Math.min(index, (config.leftPlayers?.length||1)-1)); setPlayer('left', config.leftPlayers?.[config.leftIndex]); }
+            else { config.rightIndex = Math.max(0, Math.min(index, (config.rightPlayers?.length||1)-1)); setPlayer('right', config.rightPlayers?.[config.rightIndex]); }
+        }
+
+        function setupRotation(){
+            if (rotateTimer) { clearInterval(rotateTimer); rotateTimer = null; }
+            if (!config.autoRotate) return;
+            const ms = Math.max(2000, Number(config.rotateMs)||6000);
+            rotateTimer = setInterval(()=>{
+                if (Array.isArray(config.leftPlayers) && config.leftPlayers.length > 1){
+                    config.leftIndex = (config.leftIndex + 1) % config.leftPlayers.length;
+                    setPlayer('left', config.leftPlayers[config.leftIndex]);
+                }
+                if (Array.isArray(config.rightPlayers) && config.rightPlayers.length > 1){
+                    config.rightIndex = (config.rightIndex + 1) % config.rightPlayers.length;
+                    setPlayer('right', config.rightPlayers[config.rightIndex]);
+                }
+            }, ms);
+        }
+
+        function renderTime(){
+            const total = Math.max(0, Math.round(countdown.remainingMs/1000));
+            const mm = String(Math.floor(total/60)).padStart(2,'0');
+            const ss = String(total%60).padStart(2,'0');
+            document.getElementById('clock').textContent = `${mm}:${ss}`;
+        }
+        function tick(){
+            if (!countdown.running) return;
+            const now = performance.now();
+            const dt = now - countdown.lastTick; countdown.lastTick = now;
+            countdown.remainingMs = Math.max(0, countdown.remainingMs - dt);
+            renderTime();
+            if (countdown.remainingMs <= 0) { countdown.running = false; }
+            else requestAnimationFrame(tick);
+        }
+
+        window.addEventListener('DOMContentLoaded', ()=>{
+            // Always visible
+            if (channel) channel.onmessage = onIncoming;
+            setupStorageFallback();
+            try { const raw = localStorage.getItem('codm-stream-last'); if (raw){ const d = JSON.parse(raw); if (d.type==='countdown') onIncoming(d); } } catch {}
+            renderTime();
+        });
+    </script>
+</head>
+<body class="min-h-screen text-white">
+    <div id="root" class="w-screen h-screen relative">
+        <img class="absolute inset-0 w-full h-full object-cover object-center" src="/src/img/countdown-bg.png" alt="bg">
+
+        <!-- Hero composition: players layer -->
+        <div class="absolute inset-0 z-10 pointer-events-none">
+            <div class="w-full h-full flex items-center justify-between px-6 md:px-12">
+                <img id="left-hero" class="max-h-[70vh] object-contain select-none z-0" src="/src/img/player1.png" alt="player left">
+                <img id="right-hero" class="max-h-[70vh] object-contain select-none z-0" src="/src/img/player2.png" alt="player right">
+            </div>
+        </div>
+        <!-- Crest + Title centered overlay (always centered) -->
+        <div class="absolute inset-0 z-20 pointer-events-none flex items-center justify-center mb-64">
+            <div class="flex flex-col items-center justify-center mx-4">
+                <img class="w-128 select-none" src="/src/img/LOGO.png" alt="META crest">
+                <div id="title" class="mt-3 text-[8rem] font-[Sportize] font-bold tracking-wide text-black/80">COUNTDOWN</div>
+            </div>
+        </div>
+
+        <!-- Foreground strip (anchored above marquee) -->
+        <div class="absolute left-0 w-full z-20" style="bottom: 48px;">
+                <div class="flex w-full items-stretch justify-between">
+                <div id="left-name-banner" class="flex-1 min-w-0 bg-blue-700 py-8 px-10 h-28 md:h-32 flex items-center justify-center">
+                    <span id="left-name" class="font-[Sportize] text-center leading-none tracking-wide text-7xl lg:text-[7rem]">SLYTHERIN</span>
+                </div>
+                <div class="w-40 bg-white h-28 md:h-32 flex items-center justify-center">
+                    <img id="left-logo" class="w-2 h-2 object-contain" src="/src/img/LOGO-meta2025.png" alt="left logo">
+                </div>
+                <div class="w-[28rem] bg-neutral-800 h-28 md:h-32 flex items-center justify-center">
+                    <div id="clock" class="font-[Sportize] text-6xl md:text-7xl">00:00</div>
+                </div>
+                <div class="w-40 bg-white h-28 md:h-32 flex items-center justify-center">
+                    <img id="right-logo" class="w-2 h-2 object-contain" src="/src/img/LOGO-meta2025.png" alt="right logo">
+                </div>
+                <div id="right-name-banner" class="flex-1 min-w-0 bg-red-700 py-8 px-10 h-28 md:h-32 flex items-center justify-center">
+                    <span id="right-name" class="font-[Sportize] text-center leading-none tracking-wide text-7xl lg:text-[7rem]">GRYFFINDOR</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marquee (two rows, opposite directions) -->
+        <div class="marquee-wrap z-30 py-2">
+            <div class="marquee-text rotate-left fadeout-horizontal">
+                <div class="marquee-text-track" style="--speed: 18s;">
+                    <p class="text-yellow-300">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400">| UNLEASH THE META |</p>
+                    <p class="text-yellow-300">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400">| UNLEASH THE META |</p>
+                    <p class="text-yellow-300">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400">| UNLEASH THE META |</p>
+                    <p class="text-yellow-300">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400">| UNLEASH THE META |</p>
+                    <p class="text-yellow-300" aria-hidden="true">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400" aria-hidden="true">| UNLEASH THE META |</p>
+                    <p class="text-yellow-300" aria-hidden="true">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400" aria-hidden="true">| UNLEASH THE META |</p>
+                    <p class="text-yellow-300" aria-hidden="true">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400" aria-hidden="true">| UNLEASH THE META |</p>
+                    <p class="text-yellow-300" aria-hidden="true">MARIAN ESPORTS TOURNAMENT ARENA 2025</p>
+                    <p class="text-orange-400" aria-hidden="true">| UNLEASH THE META |</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

@@ -38,8 +38,13 @@
             }, 500);
         }
         function clearAll() {
-            document.getElementById('no-content').classList.remove('hidden');
-            document.getElementById('stats').classList.add('hidden');
+            // Show default frame when nothing uploaded
+            document.getElementById('no-content').classList.add('hidden');
+            const stats = document.getElementById('stats');
+            stats.classList.remove('hidden');
+            document.getElementById('stats-top').src = 'src/img/LOGO3.png';
+            document.getElementById('stats-bottom').src = 'src/img/bottom.png';
+            document.getElementById('stats-img').removeAttribute('src');
         }
         function showMatchStats(image) {
             document.getElementById('no-content').classList.add('hidden');
@@ -47,7 +52,9 @@
             stats.classList.remove('hidden');
             document.getElementById('stats-top').src = 'src/img/LOGO3.png';
             document.getElementById('stats-bottom').src = 'src/img/bottom.png';
-            document.getElementById('stats-img').src = image;
+            const img = document.getElementById('stats-img');
+            if (image) { img.src = image; }
+            else { img.removeAttribute('src'); }
         }
         window.addEventListener('DOMContentLoaded', () => {
             clearAll();
