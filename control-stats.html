@@ -130,6 +130,7 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Action Buttons -->
                 <div class="flex gap-4">
                     <button id="send-to-viewer" class="flex-1 px-6 py-3 transition-colors bg-green-600 rounded-lg hover:bg-green-700 font-semibold">Send to Viewer</button>
@@ -169,7 +170,8 @@
         const team2LogoInput = document.getElementById('team2-logo-upload');
         const team2LogoPreview = document.getElementById('team2-logo-preview');
         const team2LogoPreviewImg = document.getElementById('team2-logo-preview-img');
-            
+        
+        
         // Action buttons
         const sendBtn = document.getElementById('send-to-viewer');
         const clearBtn = document.getElementById('clear-all');
@@ -247,8 +249,7 @@
                 team2Score: parseInt(team2Score.value) || 0,
                 team2BgColor: team2BgColor.value,
                 team2TextColor: team2TextColor.value,
-                team2Logo: currentData.team2Logo,
-                mapName: mapName.value
+                team2Logo: currentData.team2Logo
             };
             broadcast(payload);
         });
@@ -265,7 +266,6 @@
             team2Score.value = '0';
             team2BgColor.value = '#dc2626';
             team2TextColor.value = '#ffffff';
-            mapName.value = 'FIRING RANGE';
             
             // Clear file inputs
             backgroundInput.value = '';

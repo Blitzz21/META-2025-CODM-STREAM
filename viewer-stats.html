@@ -60,6 +60,22 @@
             }
         }
         
+        function setupStorageFallback() {
+            setInterval(() => {
+                try {
+                    const last = localStorage.getItem('codm-stream-last');
+                    if (last) {
+                        const payload = JSON.parse(last);
+                        if (payload.type === 'match-stats') {
+                            showMatchStats(payload);
+                        } else if (payload.type === 'clear') {
+                            clearAll();
+                        }
+                    }
+                } catch {}
+            }, 500);
+        }
+        
         function showMatchStats(data) {
             // Update team information
             document.getElementById('team1-banner').textContent = data.team1Name || 'TEAM 1';
@@ -181,6 +197,11 @@
                     }
                 } catch {}
             }, 500);
+        }
+        
+        // Setup communication
+        if (channel) {
+            channel.onmessage = onIncoming;
         }
         
         window.addEventListener('DOMContentLoaded', () => {
