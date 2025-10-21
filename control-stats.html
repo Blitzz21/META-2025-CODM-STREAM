@@ -130,16 +130,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Map Settings -->
-                <div class="bg-gray-800 rounded-lg p-6">
-                    <h2 class="text-xl font-semibold mb-4">Map Settings</h2>
-                    <div>
-                        <label class="block mb-2 text-sm font-medium">Map Name</label>
-                        <input type="text" id="map-name" value="FIRING RANGE" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:border-blue-500 focus:outline-none">
-                    </div>
-                </div>
-
                 <!-- Action Buttons -->
                 <div class="flex gap-4">
                     <button id="send-to-viewer" class="flex-1 px-6 py-3 transition-colors bg-green-600 rounded-lg hover:bg-green-700 font-semibold">Send to Viewer</button>
@@ -179,10 +169,7 @@
         const team2LogoInput = document.getElementById('team2-logo-upload');
         const team2LogoPreview = document.getElementById('team2-logo-preview');
         const team2LogoPreviewImg = document.getElementById('team2-logo-preview-img');
-        
-        // Map elements
-        const mapName = document.getElementById('map-name');
-        
+            
         // Action buttons
         const sendBtn = document.getElementById('send-to-viewer');
         const clearBtn = document.getElementById('clear-all');
