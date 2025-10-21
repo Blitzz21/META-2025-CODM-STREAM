@@ -11,7 +11,7 @@
     <div class="w-full h-full flex flex-col justify-center items-center">
         <div class="flex flex-row h-fit w-full">
             <div class="flex flex-col justify-center items-center w-full h-full">
-                <div class="w-full h-full flex justify-center items-center bg-[url(/src/img/team-bg.png)] object-center object-cover">
+                <div class="w-full h-full flex justify-center items-center bg-[url(/src/img/team-bg.png)] bg-center bg-cover bg-no-repeat">
                     <img id="team1-logo" class="w-16 hidden" alt="Team 1 Logo">
                 </div>
                 <h1 id="team1-banner" class="font-[Sportize] text-2xl w-full text-center bg-blue-500 text-white px-1">TEAM 1</h1>
@@ -20,8 +20,8 @@
                 <div class="z-40 flex flex-row">
                     <h1 id="team1-result" class="font-[Sportize] text-[5rem] text-white ml-8">DEFEAT</h1>
                     <div class="flex flex-row items-end p-2 gap-x-1 mb-6">
-                        <div id="team1-score-bar-1" class="w-10 h-4 bg-white border border-black transform skew-x-[32deg] shadow-md hidden"></div>
-                        <div id="team1-score-bar-2" class="w-10 h-4 bg-white border border-black transform skew-x-[32deg] shadow-md hidden"></div>
+                        <div id="team1-score-bar-1" class="w-10 h-2 bg-white border border-black transform skew-x-[32deg] shadow-md hidden"></div>
+                        <div id="team1-score-bar-2" class="w-10 h-2 bg-white border border-black transform skew-x-[32deg] shadow-md hidden"></div>
                     </div>
                 </div>
                 <div class="absolute inset-0 flex items-center justify-center z-20">
@@ -30,19 +30,19 @@
                 <div class="z-40 flex flex-row-reverse">
                     <h1 id="team2-result" class="font-[Sportize] text-[5rem] text-white mr-8">VICTORY</h1>
                     <div class="flex flex-row justify-end items-end p-2 gap-x-1 mb-6">
-                        <div id="team2-score-bar-1" class="w-10 h-4 bg-white border border-black transform -skew-x-[32deg] shadow-md hidden"></div>
-                        <div id="team2-score-bar-2" class="w-10 h-4 bg-white border border-black transform -skew-x-[32deg] shadow-md hidden"></div>
+                        <div id="team2-score-bar-1" class="w-10 h-2 bg-white border border-black transform -skew-x-[32deg] shadow-md hidden"></div>
+                        <div id="team2-score-bar-2" class="w-10 h-2 bg-white border border-black transform -skew-x-[32deg] shadow-md hidden"></div>
                     </div>
                 </div>
             </div>
             <div class="flex flex-col justify-center items-center w-full h-full">
-                <div class="w-full h-full flex justify-center items-center bg-[url(/src/img/team-bg.png)] object-center">
+                <div class="w-full h-full flex justify-center items-center bg-[url(/src/img/team-bg.png)] bg-center bg-cover bg-no-repeat">
                     <img id="team2-logo" class="w-16 hidden" alt="Team 2 Logo">
                 </div>
                 <h1 id="team2-banner" class="font-[Sportize] text-2xl w-full text-center bg-red-500 text-white px-1">TEAM 2</h1>
             </div>
         </div>
-        <div class="w-full h-full flex justify-center items-center overflow-hidden">
+        <div class="w-full h-full flex justify-center items-center overflow-hidden bg-black">
             <img id="stats-img" class="max-w-full max-h-full object-contain hidden" alt="Match Statistics">
         </div>
         <img src="/src/img/codmbottom.png" alt="">
@@ -58,22 +58,6 @@
             } else if (payload.type === 'clear') {
                 clearAll();
             }
-        }
-        
-        function setupStorageFallback() {
-            setInterval(() => {
-                try {
-                    const last = localStorage.getItem('codm-stream-last');
-                    if (last) {
-                        const payload = JSON.parse(last);
-                        if (payload.type === 'match-stats') {
-                            showMatchStats(payload);
-                        } else if (payload.type === 'clear') {
-                            clearAll();
-                        }
-                    }
-                } catch {}
-            }, 500);
         }
         
         function showMatchStats(data) {
@@ -197,11 +181,6 @@
                     }
                 } catch {}
             }, 500);
-        }
-        
-        // Setup communication
-        if (channel) {
-            channel.onmessage = onIncoming;
         }
         
         window.addEventListener('DOMContentLoaded', () => {
