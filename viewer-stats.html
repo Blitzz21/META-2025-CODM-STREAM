@@ -3,93 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/src/font/font.css">
-    <title>CODM Viewer - Match Stats</title>
-    <style> body { overflow: hidden; } </style>
+</head>
+<body class="h-dvh w-dvw overflow-hidden">
+    <div class="w-full h-full flex flex-col justify-center items-center">
+        <div class="flex flex-row h-fit w-full">
+            <div class="flex flex-col justify-center items-center w-full h-full">
+                <div class="w-full h-full flex justify-center items-center bg-[url(/src/img/team-bg.png)] object-center object-cover">
+                    <img id="team1-logo" class="w-16 hidden" alt="Team 1 Logo">
+                </div>
+                <h1 id="team1-banner" class="font-[Sportize] text-2xl w-full text-center bg-blue-500 text-white px-1">TEAM 1</h1>
+            </div>
+            <div alt="" class="mx-0 w-[772%] h-[150px] bg-[url(/src/img/codmtop.png)] bg-center bg-cover bg-no-repeat flex flex-row justify-between relative">
+                <div class="z-40 flex flex-row">
+                    <h1 id="team1-result" class="font-[Sportize] text-[5rem] text-white ml-8">DEFEAT</h1>
+                    <div class="flex flex-row items-end p-2 gap-x-1 mb-6">
+                        <div id="team1-score-bar-1" class="w-10 h-4 bg-white border border-black transform skew-x-[32deg] shadow-md hidden"></div>
+                        <div id="team1-score-bar-2" class="w-10 h-4 bg-white border border-black transform skew-x-[32deg] shadow-md hidden"></div>
+                    </div>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center z-20">
+                    <img class="w-auto h-auto" src="/src/img/LOGO-meta2025.png" alt="">
+                </div>
+                <div class="z-40 flex flex-row-reverse">
+                    <h1 id="team2-result" class="font-[Sportize] text-[5rem] text-white mr-8">VICTORY</h1>
+                    <div class="flex flex-row justify-end items-end p-2 gap-x-1 mb-6">
+                        <div id="team2-score-bar-1" class="w-10 h-4 bg-white border border-black transform -skew-x-[32deg] shadow-md hidden"></div>
+                        <div id="team2-score-bar-2" class="w-10 h-4 bg-white border border-black transform -skew-x-[32deg] shadow-md hidden"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col justify-center items-center w-full h-full">
+                <div class="w-full h-full flex justify-center items-center bg-[url(/src/img/team-bg.png)] object-center">
+                    <img id="team2-logo" class="w-16 hidden" alt="Team 2 Logo">
+                </div>
+                <h1 id="team2-banner" class="font-[Sportize] text-2xl w-full text-center bg-red-500 text-white px-1">TEAM 2</h1>
+            </div>
+        </div>
+        <div class="w-full h-full flex justify-center items-center overflow-hidden">
+            <img id="stats-img" class="max-w-full max-h-full object-contain hidden" alt="Match Statistics">
+        </div>
+        <img src="/src/img/codmbottom.png" alt="">
+    </div>
+
     <script>
         const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('codm-stream') : null;
-        function onIncoming(message) {
-            const data = message?.data || message;
-            if (!data || !data.type) return;
-            if (data.type === 'match-stats') {
-                showMatchStats(data.image);
-            } else if (data.type === 'clear') {
+        
+        function onIncoming(ev) {
+            const payload = ev.data;
+            if (payload.type === 'match-stats') {
+                showMatchStats(payload);
+            } else if (payload.type === 'clear') {
                 clearAll();
             }
         }
+        
+        function showMatchStats(data) {
+            // Update team information
+            document.getElementById('team1-banner').textContent = data.team1Name || 'TEAM 1';
+            document.getElementById('team2-banner').textContent = data.team2Name || 'TEAM 2';
+            document.getElementById('team1-result').textContent = data.team1Result || 'DEFEAT';
+            document.getElementById('team2-result').textContent = data.team2Result || 'VICTORY';
+            
+            // Update team logos
+            const team1Logo = document.getElementById('team1-logo');
+            const team2Logo = document.getElementById('team2-logo');
+            
+            if (data.team1Logo) {
+                team1Logo.src = data.team1Logo;
+                team1Logo.classList.remove('hidden');
+            } else {
+                team1Logo.classList.add('hidden');
+            }
+            
+            if (data.team2Logo) {
+                team2Logo.src = data.team2Logo;
+                team2Logo.classList.remove('hidden');
+            } else {
+                team2Logo.classList.add('hidden');
+            }
+            
+            // Update team banner colors
+            const team1Bg = data.team1BgColor || '#2563eb';
+            const team2Bg = data.team2BgColor || '#dc2626';
+            document.getElementById('team1-banner').style.backgroundColor = team1Bg;
+            document.getElementById('team2-banner').style.backgroundColor = team2Bg;
+            
+            // Update score bars based on team scores
+            const team1Score = parseInt(data.team1Score) || 0;
+            const team2Score = parseInt(data.team2Score) || 0;
+            
+            // Show/hide score bars based on score
+            const team1Bar1 = document.getElementById('team1-score-bar-1');
+            const team1Bar2 = document.getElementById('team1-score-bar-2');
+            const team2Bar1 = document.getElementById('team2-score-bar-1');
+            const team2Bar2 = document.getElementById('team2-score-bar-2');
+            
+            // Team 1 score bars - always visible, color based on score
+            team1Bar1.classList.remove('hidden');
+            team1Bar1.style.backgroundColor = team1Score >= 1 ? team1Bg : 'white';
+            
+            team1Bar2.classList.remove('hidden');
+            team1Bar2.style.backgroundColor = team1Score >= 2 ? team1Bg : 'white';
+            
+            // Team 2 score bars - always visible, color based on score
+            // Note: Team 2 bars are in reverse order due to flex-row-reverse layout
+            // So team2Bar1 is visually the second bar, team2Bar2 is visually the first bar
+            team2Bar1.classList.remove('hidden');
+            team2Bar1.style.backgroundColor = team2Score >= 2 ? team2Bg : 'white';
+            
+            team2Bar2.classList.remove('hidden');
+            team2Bar2.style.backgroundColor = team2Score >= 1 ? team2Bg : 'white';
+            
+            // Update background image if provided
+            const img = document.getElementById('stats-img');
+            if (data.image) { 
+                img.src = data.image; 
+                img.classList.remove('hidden');
+            } else { 
+                img.classList.add('hidden'); 
+            }
+        }
+        
+        function clearAll() {
+            // Reset to default values
+            document.getElementById('team1-banner').textContent = 'TEAM 1';
+            document.getElementById('team2-banner').textContent = 'TEAM 2';
+            document.getElementById('team1-result').textContent = 'DEFEAT';
+            document.getElementById('team2-result').textContent = 'VICTORY';
+            
+            // Hide logos
+            document.getElementById('team1-logo').classList.add('hidden');
+            document.getElementById('team2-logo').classList.add('hidden');
+            
+            // Reset banner colors
+            document.getElementById('team1-banner').style.backgroundColor = '#2563eb';
+            document.getElementById('team2-banner').style.backgroundColor = '#dc2626';
+            
+            // Reset score bars to white background (always visible)
+            const team1Bar1 = document.getElementById('team1-score-bar-1');
+            const team1Bar2 = document.getElementById('team1-score-bar-2');
+            const team2Bar1 = document.getElementById('team2-score-bar-1');
+            const team2Bar2 = document.getElementById('team2-score-bar-2');
+            
+            team1Bar1.classList.remove('hidden');
+            team1Bar1.style.backgroundColor = 'white';
+            team1Bar2.classList.remove('hidden');
+            team1Bar2.style.backgroundColor = 'white';
+            team2Bar1.classList.remove('hidden');
+            team2Bar1.style.backgroundColor = 'white';
+            team2Bar2.classList.remove('hidden');
+            team2Bar2.style.backgroundColor = 'white';
+            
+            // Hide stats image
+            document.getElementById('stats-img').classList.add('hidden');
+        }
+        
+        // Setup communication
+        if (channel) {
+            channel.onmessage = onIncoming;
+        }
+        
+        // Setup storage fallback
         function setupStorageFallback() {
-            window.addEventListener('storage', (e) => {
-                if (e.key === 'codm-stream-message' && e.newValue) {
-                    try { onIncoming(JSON.parse(e.newValue)); } catch {}
-                }
-            });
             setInterval(() => {
                 try {
-                    const raw = localStorage.getItem('codm-stream-last');
-                    if (raw) {
-                        const data = JSON.parse(raw);
-                        if ((!window.__lastAppliedTs || data.ts > window.__lastAppliedTs) && data.type === 'match-stats') {
-                            window.__lastAppliedTs = data.ts;
-                            onIncoming(data);
+                    const last = localStorage.getItem('codm-stream-last');
+                    if (last) {
+                        const payload = JSON.parse(last);
+                        if (payload.type === 'match-stats') {
+                            showMatchStats(payload);
+                        } else if (payload.type === 'clear') {
+                            clearAll();
                         }
                     }
                 } catch {}
             }, 500);
         }
-        function clearAll() {
-            // Show default frame when nothing uploaded
-            document.getElementById('no-content').classList.add('hidden');
-            const stats = document.getElementById('stats');
-            stats.classList.remove('hidden');
-            document.getElementById('stats-top').src = 'src/img/LOGO3.png';
-            document.getElementById('stats-bottom').src = 'src/img/bottom.png';
-            document.getElementById('stats-img').removeAttribute('src');
-        }
-        function showMatchStats(image) {
-            document.getElementById('no-content').classList.add('hidden');
-            const stats = document.getElementById('stats');
-            stats.classList.remove('hidden');
-            document.getElementById('stats-top').src = 'src/img/LOGO3.png';
-            document.getElementById('stats-bottom').src = 'src/img/bottom.png';
-            const img = document.getElementById('stats-img');
-            if (image) { img.src = image; }
-            else { img.removeAttribute('src'); }
-        }
+        
         window.addEventListener('DOMContentLoaded', () => {
             clearAll();
-            if (channel) { channel.onmessage = onIncoming; }
             setupStorageFallback();
-            try {
-                const raw = localStorage.getItem('codm-stream-last');
-                if (raw) {
-                    const data = JSON.parse(raw);
-                    if (data.type === 'match-stats') { window.__lastAppliedTs = data.ts; onIncoming(data); }
-                }
-            } catch {}
         });
     </script>
-    <style>
-        html, body { height: 100%; }
-    </style>
-</head>
-<body class="min-h-screen text-white">
-    <div class="flex flex-col h-screen">
-        <div class="flex-1 flex items-center justify-center">
-            <div id="no-content" class="text-gray-500 text-center">
-                <svg class="w-24 h-24 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg>
-                <p class="text-lg">Waiting for match stats...</p>
-            </div>
-
-            <div id="stats" class="hidden w-full">
-                <div class="w-dvw h-dvh mx-auto relative overflow-hidden">
-                    <img id="stats-top" alt="" class="absolute top-0 left-0 w-full h-auto z-20 pointer-events-none">
-                    <img id="stats-img" class="absolute inset-0 w-full h-full object-contain object-center z-0" alt="Match Statistics">
-                    <img id="stats-bottom" alt="" class="absolute bottom-0 left-0 w-full h-auto z-10">
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
-
